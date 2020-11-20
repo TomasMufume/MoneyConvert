@@ -10,9 +10,10 @@ void main() async{
 
   runApp(MaterialApp(
     home: Home(),
+    title: 'Conversor',
     theme: ThemeData(
       hintColor: Colors.red,
-      primaryColor: Colors.green
+      primaryColor: Colors.red
     ),
     debugShowCheckedModeBanner: false,
 
