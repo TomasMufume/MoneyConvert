@@ -1,14 +1,27 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:async/async.dart';
+import 'package:http/http.dart' as http;
+import 'dart:async';
+import 'dart:convert';
 
+const request = "https://api.hgbrasil.com/finance?format=json&key=60df7606";
 
+void main() async{
 
-void main(){
   runApp(MaterialApp(
     home: Home(),
+    theme: ThemeData(
+      hintColor: Colors.red,
+      primaryColor: Colors.green
+    ),
     debugShowCheckedModeBanner: false,
 
   ));
+}
+
+Future <Map> getData() async {
+  http.Response response = await http.get(request);
+  return json.decode(response.body);
 }
 class Home extends StatefulWidget {
   @override
@@ -16,6 +29,26 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+
+  final realController = TextEditingController();
+  final dolarController = TextEditingController();
+  final euroController = TextEditingController();
+
+  double dolar;
+  double euro;
+
+  void _realChanged (String text){
+    print(text);
+  }
+
+  void _dolarChanged (String text){
+    print(text);
+  }
+
+  void _euroChanged (String text){
+    print(text);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,7 +58,66 @@ class _HomeState extends State<Home> {
         backgroundColor: Colors.red,
         centerTitle: true,
         ),
-     // body: FutureBuilder <Map> (builder: null),
+      body: FutureBuilder <Map> (
+          future: getData(),
+          // ignore: missing_return
+          builder: (context, snapshot) {
+            switch(snapshot.connectionState){
+              case ConnectionState.none:
+              case ConnectionState.waiting:
+                return Center(
+                  child: Text("Carregando dados!", style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 25),
+                  textAlign: TextAlign.center),
+
+                );
+              default:
+                if(snapshot.hasError){
+                  return Center(
+                    child: Text("Erro Carregando dados!", style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 25),
+                        textAlign: TextAlign.center),
+
+                  );
+                } else{
+                  dolar = snapshot.data["results"]["currencies"]["USD"]["buy"];
+                  euro = snapshot.data["results"]["currencies"]["EUR"]["buy"];
+                  return SingleChildScrollView(
+                    padding: EdgeInsets.all(10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Icon(Icons.money_off, size: 150, color: Colors.redAccent),
+                        Divider(),
+                        buildTextField("Reais", "R\$ ", realController, _realChanged),
+                        Divider(),
+                        buildTextField("Dolares", "USD ", dolarController, _dolarChanged),
+                        Divider(),
+                        buildTextField("Euros", "€ ", euroController, _euroChanged)
+                        ],
+                    ),
+                  );
+                }
+            }
+          }),
     );
   }
 }
+ Widget buildTextField(String label, prefix, TextEditingController c, Function f){
+  return  TextField(
+    controller: c,
+    decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.red),
+        border: OutlineInputBorder(),
+        prefixText: prefix
+    ),
+    style: TextStyle(
+        color: Colors.red, fontSize: 25
+    ),
+    onChanged: f,
+    keyboardType: TextInputType.number,
+  );
+ }
